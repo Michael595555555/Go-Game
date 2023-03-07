@@ -38,7 +38,8 @@ public class Board {
             for(int i = 0; i < 19; i++){
                 x = 0.1 + 0.02 * 2 * i;
                 this.cellArr[i][j] = new Cell(true, false, x, y, i, j);
-                this.cellArr[i][j].drawCell();
+                // this.cellArr[i][j].drawCell();
+                this.cellArr[i][j].drawdot();
                 //StdDraw.pause(1000);
             }
         }
@@ -142,8 +143,10 @@ public class Board {
 //     public double getElementYcord(int a, int b){
 //         return cellArr[a][b].getYpos();
 
-    public void updatechi(){
-        
+    public void checkEyes(){
+        for(GoString i : this.black){
+            
+        }
     }
 
     public void showStone(){
@@ -248,7 +251,7 @@ public class Board {
         StdDraw.text(xcord, ycord, s);
     }
 
-    public boolean checkbuttonpressed(double y){
+    public boolean checkbuttonpressed(int y){
         double x = 1.2;
         double m = x - 0.2 * y;
         double xcord = StdDraw.mouseX();

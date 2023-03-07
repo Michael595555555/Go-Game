@@ -1,6 +1,7 @@
 import java.lang.Math; 
 public class Cell {
 
+    boolean isEye;
     int blackchi;
     int whitechi;
     String color;
@@ -17,6 +18,7 @@ public class Cell {
         this.xpos = xpos;
         this.ypos = ypos;
         this.color = "null";
+        this.isEye = false;
     }
 
     public void increasechi(){
