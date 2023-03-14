@@ -10,29 +10,44 @@ import java.util.*;
 public class Board {
 
     int currterri = 0;
+    boolean isEnded;
     int blackterri, whiteterri;
     int Colorstate = 1;
     int count = 0;
     int currentX;
     int currentY;
     boolean play;
+    int component;
     ArrayList<GoString> black;
     ArrayList<GoString> white;
     Cell[][] cellArr;
     boolean[][] arr;
     boolean[][] visited;
     HashSet<String> colors;
+    int white_capture;
+    int black_capture;
+    int[][] comp;
     
     public Board(){
         this.blackterri = 0;
         this.whiteterri = 0;
+        this.white_capture = 0;
+        this.black_capture = 0;
         this.colors = new HashSet<String>();
         this.visited = new boolean[19][19];
         this.arr = new boolean[19][19];
         double x = 0;
         double y = 0;
+        this.isEnded = false;
         this.play = true;
         this.cellArr = new Cell[19][19];
+        this.comp = new int[19][19];
+        this.component = 0;
+        for(int i = 0; i < 19; i++){
+            for(int j = 0; j < 19; j++){
+                comp[i][j] = 0;
+            }
+        }
         for(int j = 0; j < 19; j++){
             y = 0.1 + 0.02 * 2 * j;
             for(int i = 0; i < 19; i++){
@@ -143,10 +158,11 @@ public class Board {
 //     public double getElementYcord(int a, int b){
 //         return cellArr[a][b].getYpos();
 
-    public void checkEyes(){
-        for(GoString i : this.black){
-            
+    public void show_territory(String color, ArrayList<Cell> arr){
+        for(Cell c : arr){
+            c.draw_square(color);
         }
+        StdDraw.show();
     }
 
     public void showStone(){
@@ -283,29 +299,34 @@ public class Board {
         }
     }
 
-    public void searcher(int x, int y){
-        if(!this.cellArr[x][y].getState()){
+    public void searcher(int x, int y, ArrayList<Cell> arr){
+        if(!this.cellArr[x][y].getState() && !this.cellArr[x][y].getMark()){
             this.colors.add(cellArr[x][y].getcolor());
             return;
-        } 
+        }
         if(this.visited[x][y]){
             return;
         }
+        if(this.cellArr[x][y].getMark()){
+            this.currterri++;
+        }
         this.visited[x][y] = true;
+
+        arr.add(this.cellArr[x][y]);
 
         this.currterri++;
 
         if(x + 1 <= 18){
-            this.searcher(x+1, y);
+            this.searcher(x+1, y, arr);
         }
         if(x - 1 >= 0){
-            this.searcher(x-1, y);
+            this.searcher(x-1, y, arr);
         }
         if(y + 1 <= 18){
-            this.searcher(x, y+1);
+            this.searcher(x, y+1, arr);
         }
         if(y - 1 >= 0){
-            this.searcher(x, y-1);
+            this.searcher(x, y-1, arr);
         }
 
 
@@ -315,23 +336,27 @@ public class Board {
     public void countTerritory(){
         // this.blackterri = 0;
         // this.whiteterri = 0;
+        ArrayList<Cell> terri = new ArrayList<Cell>();
         for(int i = 0; i < 19; i++){
             for(int j = 0; j < 19; j++){
                 if(!visited[i][j]){
                     //reset the variable to be 0.
                     this.currterri = 0;
                     this.colors.clear();
-                    System.out.println("start searching");
-                    this.searcher(i, j);
+                    this.searcher(i, j, terri);
                     if(this.colors.size() == 1){
                         if(this.colors.contains("black")){
                             this.blackterri += this.currterri;
+                            this.show_territory("black", terri);
+
                         }
                         else if(this.colors.contains("white")){
                             this.whiteterri += this.currterri;
+                            this.show_territory("white", terri);
                         }
                     }
                 }
+                terri.clear();
             }
         }
 
@@ -342,8 +367,16 @@ public class Board {
 
     public void showbuttons(){
         this.buttonmaker(2, "Show X");
-        this.buttonmaker(4, "Count");
+        this.buttonmaker(4, "Endgame");
         this.buttonmaker(3, "reset");
+    }
+
+    public void clear_button(int x, String c){
+        StdDraw.setPenColor(StdDraw.WHITE);
+        StdDraw.filledRectangle(1.2, 1.2 - 0.2 * x, 0.11, 0.03);
+        this.buttonmaker(4, c);
+
+        StdDraw.show();
     }
 
     public void boxCreator(double x, double y, double halfwidth, double halfheight){
@@ -370,17 +403,28 @@ public class Board {
     
 
     public void buttonchecker(){
-        if(this.checkbuttonpressed(4)){
+        if(this.checkbuttonpressed(4) && !this.isEnded){
             this.again();
-            this.boxCreator(1.25, 0.15, 0.2, 0.1);
-            this.countTerritory();
-            Font font = new Font("ARIAL", Font.BOLD, 20);
-            StdDraw.setFont(font);
-            StdDraw.text(1.2, 0.2, "Black Territory: " + Integer.toString(blackterri));
-            StdDraw.text(1.2, 0.1, "White Territory: " + Integer.toString(whiteterri));
-            StdDraw.show();
-            StdDraw.pause(2000);
-            this.ClearBox(1.25, 0.15, 0.2, 0.1);
+
+            this.end();
+
+            while(true){
+                if(this.checkbuttonpressed(4)){
+                    this.boxCreator(1.25, 0.15, 0.2, 0.1);
+                    this.countTerritory();
+                    Font font = new Font("ARIAL", Font.BOLD, 20);
+                    StdDraw.setFont(font);
+                    StdDraw.text(1.2, 0.2, "Black Territory: " + Integer.toString(blackterri + black_capture));
+                    StdDraw.text(1.2, 0.1, "White Territory: " + Integer.toString(whiteterri + white_capture) );
+                    StdDraw.show();
+                    // StdDraw.pause(2000);
+                    // this.ClearBox(1.25, 0.15, 0.2, 0.1);
+                    this.isEnded = true;
+                    break;
+                }
+            }
+            StdDraw.pause(300);
+           
         }
         if(this.checkbuttonpressed(3)){
             StdDraw.clear();
@@ -390,7 +434,9 @@ public class Board {
 
     public void update(){
         this.buttonchecker();
-        this.showStone();
+        if(!this.isEnded){
+            this.showStone();
+        }
         
     }
 
@@ -404,21 +450,20 @@ public class Board {
             }
         }
 
-
-
         for(int i = 0; i < 19; i++){
             for(int j = 0; j < 19; j++){
                 //check the existence of a stone in the position
                 //if there is a stone and it isnt visited, start the recursive call. 
                 //if there isnt a stone, continue. 
                 if(!cellArr[i][j].getState() && !arr[i][j]){
+                    component++;
                     if(cellArr[i][j].getcolor().equals("black")){
                         this.black.add(new GoString());
-                        recursiveCall(i, j, black.get(black.size()-1), cellArr[i][j].getcolor());
+                        recursiveCall(i, j, black.get(black.size()-1), cellArr[i][j].getcolor(), component);
                     }
                     else{
                         this.white.add(new GoString());
-                        recursiveCall(i, j, white.get(white.size()-1), cellArr[i][j].getcolor());
+                        recursiveCall(i, j, white.get(white.size()-1), cellArr[i][j].getcolor(), component);
                     }
                     // make a new gostring once u reached an end or smth(new search).
                 }
@@ -464,6 +509,7 @@ public class Board {
                 if(gs.getchi() == 0){
                     //return true
                     gs.removeall();
+                    this.white_capture += gs.return_size();
                 }
             }
         }
@@ -471,10 +517,65 @@ public class Board {
             for(GoString gs : black){
                 if(gs.getchi() == 0){
                     gs.removeall();
+                    this.black_capture += gs.return_size();
                 }
             }
         }
     }
+
+    public void click(String color, String square_color){
+        
+        while(!this.checkbuttonpressed(4)){
+            double x = StdDraw.mouseX();
+            double y = StdDraw.mouseY();
+            for(int i = 0; i < 19; i++){
+                for(int j = 0; j < 19; j++){
+                    double m = cellArr[i][j].getXpos();
+                    double n = cellArr[i][j].getYpos();
+                    double a = m - x;
+                    double b = n - y;
+                    if(Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)) <= 0.01 && StdDraw.isMousePressed()){
+                        System.out.println("enter1");
+                        if(cellArr[i][j].getcolor().equals(color)){
+                            System.out.println("enter2");
+                            for(int alpha = 0; alpha < 19; alpha++){
+                                for(int beta = 0; beta < 19; beta++){
+                                    if(comp[alpha][beta] == comp[i][j]){
+                                        System.out.println("begin");
+                                        cellArr[alpha][beta].draw_square(square_color);
+                                        cellArr[alpha][beta].setMark(true);
+                                        System.out.println("end");
+                                        
+                                        // if(this.cellArr[alpha][beta].getcolor().equals("black")){
+                                        //     this.whiteterri++;
+                                        //     continue;
+                                        // }
+                                        // this.blackterri++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                   
+                }
+            }
+            
+
+        }
+    }
+
+    public void end(){
+        this.clear_button(4, "black");
+        StdDraw.pause(300);
+        System.out.println(111111);
+        this.click("black", "white");
+        StdDraw.pause(300);
+        this.clear_button(4, "white");
+        this.click("white", "black");
+        this.clear_button(4, "Finish");
+        StdDraw.pause(300);
+    }
+
 
     public boolean checkEat(String color){
         if(color.equals("white")){
@@ -498,26 +599,26 @@ public class Board {
     }
 
 
-    public void recursiveCall(int x, int y, GoString gs, String color){
-        if(this.cellArr[x][y].getState() || this.arr[x][y]){
+    public void recursiveCall(int x, int y, GoString gs, String color, int curr_comp){
+        if((this.cellArr[x][y].getState())|| this.arr[x][y]){
             return; //if we reached to an end, then stop the method
         }
-        else{
-            gs.addcell(this.cellArr[x][y]);
-            // gs.changeliberties(this.cellArr); // add a cell once u reached and checked
-            this.arr[x][y] = true;
-            if(x + 1 <= 18 && cellArr[x+1][y].getcolor().equals(color)){
-                this.recursiveCall(x+1, y, gs, cellArr[x+1][y].getcolor());
-            }
-            if(x - 1 >= 0 && cellArr[x-1][y].getcolor().equals(color)){
-                this.recursiveCall(x-1, y, gs, cellArr[x-1][y].getcolor());
-            }
-            if(y + 1 <= 18 && cellArr[x][y+1].getcolor().equals(color)){
-                this.recursiveCall(x, y+1, gs, cellArr[x][y+1].getcolor());
-            }
-            if(y - 1 >= 0 && cellArr[x][y-1].getcolor().equals(color)){
-                this.recursiveCall(x, y-1, gs, cellArr[x][y-1].getcolor());
-            }
+        comp[x][y] = curr_comp;
+        
+        gs.addcell(this.cellArr[x][y]);
+        // gs.changeliberties(this.cellArr); // add a cell once u reached and checked
+        this.arr[x][y] = true;
+        if(x + 1 <= 18 && cellArr[x+1][y].getcolor().equals(color)){
+            this.recursiveCall(x+1, y, gs, cellArr[x+1][y].getcolor(), curr_comp);
+        }
+        if(x - 1 >= 0 && cellArr[x-1][y].getcolor().equals(color)){
+            this.recursiveCall(x-1, y, gs, cellArr[x-1][y].getcolor(), curr_comp);
+        }
+        if(y + 1 <= 18 && cellArr[x][y+1].getcolor().equals(color)){
+            this.recursiveCall(x, y+1, gs, cellArr[x][y+1].getcolor(), curr_comp);
+        }
+        if(y - 1 >= 0 && cellArr[x][y-1].getcolor().equals(color)){
+            this.recursiveCall(x, y-1, gs, cellArr[x][y-1].getcolor(), curr_comp);
         }
     }
 

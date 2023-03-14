@@ -11,6 +11,8 @@ public class Cell {
     boolean state;
     boolean clicked;
     double x, y;
+    int component;
+    boolean marked;
     public Cell(boolean state, boolean clicked, double x, double y, int xpos, int ypos){
         this.state = state;
         this.x = x;
@@ -19,11 +21,18 @@ public class Cell {
         this.ypos = ypos;
         this.color = "null";
         this.isEye = false;
+        this.marked = false;
     }
 
     public void increasechi(){
         this.currentchi++;
     }
+
+
+    public boolean getMark(){
+        return this.marked;
+    }
+
 
     public void setcolor(String color){
         this.color = color;
@@ -105,6 +114,22 @@ public class Cell {
 
     public int getChi(){
         return currentchi;
+    }
+
+    public void setMark(boolean x){
+        this.marked = x;
+    }
+
+    public void draw_square(String c){
+        if(c.equals("black")){
+            StdDraw.setPenColor(StdDraw.BLACK);
+        }
+        else{
+            StdDraw.setPenColor(StdDraw.WHITE);
+        }
+        StdDraw.filledSquare(this.x, this.y, 0.008);
+        StdDraw.setPenColor(StdDraw.BLACK);
+        StdDraw.show();
     }
 
     //public void showNumber(){

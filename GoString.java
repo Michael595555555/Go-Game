@@ -17,6 +17,10 @@ public class GoString {
         return false;
     }
 
+    public int return_size(){
+        return this.arr.size();
+    }
+
     public void removeall(){
         for(Cell c : arr){
             c.capture();
