@@ -27,12 +27,21 @@ public class Board {
     int white_capture;
     int black_capture;
     int[][] comp;
+    int[] black_ko;
+    int[] white_ko;
     
     public Board(){
         this.blackterri = 0;
         this.whiteterri = 0;
         this.white_capture = 0;
         this.black_capture = 0;
+        this.black_ko = new int[2];
+        this.white_ko = new int[2];
+
+        for(int i = 0; i < 2; i++){
+            this.black_ko[i] = -1;
+            this.white_ko[i] = -1;
+        }
         this.colors = new HashSet<String>();
         this.visited = new boolean[19][19];
         this.arr = new boolean[19][19];
@@ -176,12 +185,13 @@ public class Board {
                 double n = cellArr[currentX][currentY].getYpos();
                 double a = m - x;
                 double b = n - y;
-                if(Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)) <= 0.01 && StdDraw.isMousePressed() && cellArr[currentX][currentY].getState()){ //distance
+                if(Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)) <= 0.01 && StdDraw.isMousePressed() && cellArr[currentX][currentY].getState() ){ //distance
                     StdDraw.setPenRadius(0.005);
-                    if(Colorstate == 1){
+                    if(Colorstate == 1 && (currentX != white_ko[0] || currentY != white_ko[1])){
+
                         this.checkPlay("black", currentX, currentY);
                     }
-                    else if(Colorstate == 0){
+                    else if(Colorstate == 0 && (currentX != black_ko[0] || currentY != black_ko[1])){
                         this.checkPlay("white", currentX, currentY);
                     }
                     
@@ -360,8 +370,6 @@ public class Board {
             }
         }
 
-        System.out.println(this.blackterri);
-        System.out.println(this.whiteterri);
 
     }
 
@@ -470,22 +478,14 @@ public class Board {
             }
         }
 
-        System.out.println("Black");
         for(GoString gs : this.black){
             gs.changeliberties(cellArr);
-            gs.print();
-            System.out.println(gs.getchi());
-            System.out.println(" ");
         }
-        System.out.println("White");
+
         for(GoString gs : this.white){
             gs.changeliberties(cellArr);
-            gs.print();
-            System.out.println(gs.getchi());
-            System.out.println(" ");
         }
         
-        System.out.println();
 
 
     
@@ -504,21 +504,46 @@ public class Board {
     }
 
     public void eat(String color){
+        int counter = 0;
+        GoString curr_gs = null;
+
         if(color.equals("black")){
+
+            this.black_ko[0] = -1;
+            this.black_ko[1] = -1;
+
             for(GoString gs : white){
                 if(gs.getchi() == 0){
                     //return true
                     gs.removeall();
-                    this.white_capture += gs.return_size();
+                    this.black_capture += gs.return_size();
+                    counter += gs.return_size();
+                    curr_gs = gs;
+                    //change boolean to true
                 }
             }
+            if(counter == 1){
+                this.black_ko[0] = curr_gs.getStones().get(0).getX();
+                this.black_ko[1] = curr_gs.getStones().get(0).getY();
+            }
+            
         }
         else{
+
+            this.white_ko[0] = -1;
+            this.white_ko[1] = -1;
+
             for(GoString gs : black){
                 if(gs.getchi() == 0){
                     gs.removeall();
-                    this.black_capture += gs.return_size();
+                    this.white_capture += gs.return_size();
+                    curr_gs = gs;
+                    counter += gs.return_size();
                 }
+            }
+            if(counter == 1){
+                this.white_ko[0] = curr_gs.getStones().get(0).getX();
+                this.white_ko[1] = curr_gs.getStones().get(0).getY();
             }
         }
     }
@@ -535,16 +560,14 @@ public class Board {
                     double a = m - x;
                     double b = n - y;
                     if(Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)) <= 0.01 && StdDraw.isMousePressed()){
-                        System.out.println("enter1");
+
                         if(cellArr[i][j].getcolor().equals(color)){
-                            System.out.println("enter2");
+        
                             for(int alpha = 0; alpha < 19; alpha++){
                                 for(int beta = 0; beta < 19; beta++){
                                     if(comp[alpha][beta] == comp[i][j]){
-                                        System.out.println("begin");
                                         cellArr[alpha][beta].draw_square(square_color);
                                         cellArr[alpha][beta].setMark(true);
-                                        System.out.println("end");
                                         
                                         // if(this.cellArr[alpha][beta].getcolor().equals("black")){
                                         //     this.whiteterri++;
@@ -567,7 +590,6 @@ public class Board {
     public void end(){
         this.clear_button(4, "black");
         StdDraw.pause(300);
-        System.out.println(111111);
         this.click("black", "white");
         StdDraw.pause(300);
         this.clear_button(4, "white");
@@ -581,7 +603,6 @@ public class Board {
         if(color.equals("white")){
             for(GoString gs : black){
                 if(gs.getchi() == 0){
-                    System.out.println("true");
                     return true;
                 }
             }
@@ -589,12 +610,10 @@ public class Board {
         else{
             for(GoString gs : white){
                 if(gs.getchi() == 0){
-                    System.out.println("true");
                     return true;
                 }
             }
         }
-        System.out.println("false");
         return false;
     }
 

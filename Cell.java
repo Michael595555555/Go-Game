@@ -28,7 +28,6 @@ public class Cell {
         this.currentchi++;
     }
 
-
     public boolean getMark(){
         return this.marked;
     }

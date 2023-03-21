@@ -17,6 +17,11 @@ public class GoString {
         return false;
     }
 
+    public ArrayList<Cell> getStones(){
+        return this.arr;
+    }
+
+
     public int return_size(){
         return this.arr.size();
     }
