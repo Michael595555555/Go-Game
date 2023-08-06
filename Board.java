@@ -29,6 +29,8 @@ public class Board {
     int[][] comp;
     int[] black_ko;
     int[] white_ko;
+    int[][] blackdist;
+    int[][] whitedist;
     
     public Board(){
         this.blackterri = 0;
@@ -52,6 +54,8 @@ public class Board {
         this.cellArr = new Cell[19][19];
         this.comp = new int[19][19];
         this.component = 0;
+        this.blackdist = new int[19][19];
+        this.whitedist = new int[19][19];
         for(int i = 0; i < 19; i++){
             for(int j = 0; j < 19; j++){
                 comp[i][j] = 0;
@@ -368,6 +372,39 @@ public class Board {
                 }
                 terri.clear();
             }
+        }
+
+
+    }
+
+    public void distMatrix(){
+
+    }
+
+    public void distSearch(int a, int b, String color, int dist, int startX, int startY){
+        if(!cellArr[a][b].getcolor().equals(color)){
+            return;
+        }
+        else{
+            if(color.equals("black")){
+                blackdist[startX][startY] = dist+1;
+            }
+            else{
+                whitedist[startX][startY] = dist+1;
+            }
+        }
+
+        if(a + 1 <= 18){
+            this.searcher(x+1, y, arr);
+        }
+        if(x - 1 >= 0){
+            this.searcher(x-1, y, arr);
+        }
+        if(y + 1 <= 18){
+            this.searcher(x, y+1, arr);
+        }
+        if(y - 1 >= 0){
+            this.searcher(x, y-1, arr);
         }
 
 

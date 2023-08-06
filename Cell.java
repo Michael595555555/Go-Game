@@ -1,5 +1,5 @@
 import java.lang.Math; 
-public class Cell {
+public class Cell extends GoString{
 
     boolean isEye;
     int blackchi;
