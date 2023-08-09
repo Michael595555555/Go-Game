@@ -4,6 +4,8 @@ import java.lang.Math;
 import java.awt.Font;
 import java.util.Random;
 
+
+
 import javax.swing.text.DefaultStyledDocument.ElementSpec;
 
 import java.util.*;
@@ -377,35 +379,68 @@ public class Board {
 
     }
 
-    public void distMatrix(){
+    public int[][] distMatrix(){
+        int[][] confidence = new int[19][19];
 
+        for(int i = 0; i < 19; i++){
+            for(int j = 0; j < 19; j++){
+                if(cellArr[i][j].getcolor().equals("null")){
+                    distSearch("black", i, j);
+                    distSearch("white", i, j);
+                    confidence[i][j] = 1 - Math.min(blackdist[i][j], whitedist[i][j]) / Math.max(blackdist[i][j], whitedist[i][j]);
+                }
+                
+            }
+        }
+
+        return confidence;
     }
 
-    public void distSearch(int a, int b, String color, int dist, int startX, int startY){
-        if(!cellArr[a][b].getcolor().equals(color)){
-            return;
-        }
-        else{
-            if(color.equals("black")){
-                blackdist[startX][startY] = dist+1;
-            }
-            else{
-                whitedist[startX][startY] = dist+1;
-            }
-        }
+    public void distSearch(String color, int startX, int startY){
 
-        if(a + 1 <= 18){
-            this.searcher(x+1, y, arr);
+        Queue<pair> pq = new LinkedList<>();
+
+        pq.add(new pair(0, cellArr[startX][startY]));
+
+        while(!pq.isEmpty()){
+            pair cur = pq.poll();
+           
+            
+
+            if(cur.getCell().getcolor().equals(color)){
+                if(color.equals("black")){
+                    blackdist[startX][startY] = cur.getSteps();
+                }
+                else{
+                    whitedist[startX][startY] = cur.getSteps();
+                }
+                return;
+            }
+            else if(!(cur.getCell().getcolor().equals("null") || cur.getCell().getcolor().equals(color))){
+                continue;
+            }
+
+            if(cur.getCell().getX() + 1 <= 18){
+               pq.add(new pair(cur.getSteps()+1, cellArr[cur.getCell().getX()+1][cur.getCell().getY()]));
+            }
+            if(cur.getCell().getX() - 1 >= 0){
+               pq.add(new pair(cur.getSteps()+1, cellArr[cur.getCell().getX()-1][cur.getCell().getY()]));
+            }
+            if(cur.getCell().getY() + 1 <= 18){
+               pq.add(new pair(cur.getSteps()+1, cellArr[cur.getCell().getX()][cur.getCell().getY()+1]));
+            }
+            if(cur.getCell().getY() - 1 >= 0){
+               pq.add(new pair(cur.getSteps()+1, cellArr[cur.getCell().getX()][cur.getCell().getY()-1]));
+            }
+
+
+
+
+
         }
-        if(x - 1 >= 0){
-            this.searcher(x-1, y, arr);
-        }
-        if(y + 1 <= 18){
-            this.searcher(x, y+1, arr);
-        }
-        if(y - 1 >= 0){
-            this.searcher(x, y-1, arr);
-        }
+        
+        return;
+        
 
 
     }
