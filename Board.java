@@ -3,6 +3,11 @@ import java.util.HashSet;
 import java.lang.Math;
 import java.awt.Font;
 import java.util.Random;
+import java.math.RoundingMode;  
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+
 
 
 
@@ -33,6 +38,8 @@ public class Board {
     int[] white_ko;
     int[][] blackdist;
     int[][] whitedist;
+    boolean[][] v;
+    int[][] category;
     
     public Board(){
         this.blackterri = 0;
@@ -41,12 +48,14 @@ public class Board {
         this.black_capture = 0;
         this.black_ko = new int[2];
         this.white_ko = new int[2];
+        category = new int[19][19];
 
         for(int i = 0; i < 2; i++){
             this.black_ko[i] = -1;
             this.white_ko[i] = -1;
         }
         this.colors = new HashSet<String>();
+        this.v = new boolean[19][19];
         this.visited = new boolean[19][19];
         this.arr = new boolean[19][19];
         double x = 0;
@@ -252,8 +261,8 @@ public class Board {
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.circle(cellArr[i][j].getXpos(), cellArr[i][j].getYpos(), 0.0168);
         StdDraw.setPenColor(StdDraw.WHITE);
-        cellArr[currentX][currentY].play();
-        cellArr[currentX][currentY].setcolor("white");
+        cellArr[i][j].play();
+        cellArr[i][j].setcolor("white");
         this.Colorstate = 1;
         this.turn("black");
         this.count+=1;
@@ -263,13 +272,15 @@ public class Board {
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.circle(cellArr[i][j].getXpos(), cellArr[i][j].getYpos(), 0.0168);
         
-        cellArr[currentX][currentY].play();
-        cellArr[currentX][currentY].setcolor("black");
+        cellArr[i][j].play();
+        cellArr[i][j].setcolor("black");
         this.drawOver();
         this.Colorstate = 0;
         this.turn("White");
         this.count +=1;
     }
+
+    
        
 
     public void buttonmaker(double y, String s){
@@ -379,15 +390,184 @@ public class Board {
 
     }
 
-    public int[][] distMatrix(){
-        int[][] confidence = new int[19][19];
+    public boolean checkadj(int i, int j, String color){
+        if(i + 1 <= 18){
+            if(!cellArr[i+1][j].getcolor().equals(color) && !cellArr[i+1][j].getcolor().equals("null")){
+                return false;
+            }
+        }
+        if(i - 1 >= 0){
+            if(!cellArr[i-1][j].getcolor().equals(color) && !cellArr[i-1][j].getcolor().equals("null")){
+                return false;
+            }
+        }
+        if(j + 1 <= 18){
+            if(!cellArr[i][j+1].getcolor().equals(color) && !cellArr[i][j+1].getcolor().equals("null")){
+                return false;
+            }
+        }
+        if(j - 1 >= 0){
+            if(!cellArr[i][j-1].getcolor().equals(color) && !cellArr[i][j-1].getcolor().equals("null")){
+                return false;
+            }
+        }
+
+        return true;
+        
+    }
+
+    
+    public void selfplay(int k){
+        try{
+            File game = new File("game1.txt");
+            Scanner reader = new Scanner(game);
+            int i = 1;
+            boolean turn = true;
+            
+            while(reader.hasNextLine() && i < 16+k){
+
+                StdDraw.setPenRadius(0.005);
+
+                if(i < 16){
+                    String s = reader.nextLine();
+                    i++;
+                    continue;
+                }
+                char[] arr = reader.nextLine().toCharArray();
+                int xIndex; 
+                int yIndex;
+                if(i == 16){
+                    xIndex = (int) arr[3]-97;
+                    yIndex = (int) arr[4]-97;
+                }
+                else{
+                    if(arr[3] == '[' && arr[4] == ']'){
+                        break;
+                    }
+                    xIndex = (int) arr[4]-97;
+                    yIndex = (int) arr[5]-97;
+                }
+
+                
+
+                if(turn){
+                    this.checkPlay("black", xIndex, yIndex);
+                    StdDraw.show();
+                }
+                else{
+                    this.checkPlay("white", xIndex, yIndex);
+                    StdDraw.show();
+                }
+
+                
+
+                
+
+                turn = !turn;
+
+                i++;
+
+            }
+        }
+        catch(FileNotFoundException e){
+            System.out.println("!");
+            e.printStackTrace();
+        }
+    
+    
+    }
+
+
+    public void printDistArray(double[][] arr){
+        for(int i = 0; i < arr.length; i++){
+            for(int j = 0; j < arr.length; j++){
+                System.out.print(arr[i][j] + " ");
+            }
+            System.out.println();
+        }
+
+        return;
+    }
+
+    public double sumBlack(){
+        double b = 0;
+        for(int i = 0; i < 19; i++){
+            for(int j = 0; j < 19; j++){
+                if(category[i][j] == 1){
+                    b += distMatrix()[i][j];
+                }
+            }
+        }
+        return b;
+    }
+
+    public double sumWhite(){
+        double b = 0;
+        for(int i = 0; i < 19; i++){
+            for(int j = 0; j < 19; j++){
+                if(category[i][j] == 2){
+                    b += distMatrix()[i][j];
+                }
+            }
+        }
+        return b;
+    }
+
+
+
+
+
+    public void theoretical(int tb, int tw, double k){
+
+        // double b = 0;
+        // double w = 0;
+
+        double[][] conf = distMatrix();
+
+        // for(int i = 0; i < 19; i++){
+        //     for(int j = 0; j < 19; j++){
+        //         if(category[i][j] == 1){
+        //             b += conf[i][j];
+        //         }
+        //         else if(category[i][j] == 2){
+        //             w += conf[i][j];
+        //         }
+        //     }
+        // }
+
+        double estiBlack = 0;
+        double estiWhite = 0;
+
+        for(int i = 0; i < 19; i++){
+            for(int j = 0; j < 19; j++){
+                if(category[i][j] == 1){
+                    estiBlack += k * conf[i][j];
+                }
+                else if(category[i][j] == 2){
+                    estiWhite += k * conf[i][j];
+                }
+            }
+        }
+
+        System.out.println(estiBlack);
+        System.out.println(estiWhite);
+
+        
+    }
+
+    public double[][] distMatrix(){
+        double[][] confidence = new double[19][19];
 
         for(int i = 0; i < 19; i++){
             for(int j = 0; j < 19; j++){
                 if(cellArr[i][j].getcolor().equals("null")){
+                    
                     distSearch("black", i, j);
                     distSearch("white", i, j);
-                    confidence[i][j] = 1 - Math.min(blackdist[i][j], whitedist[i][j]) / Math.max(blackdist[i][j], whitedist[i][j]);
+                   
+                    confidence[i][j] = (1.0 -  (double) Math.min(blackdist[i][j], whitedist[i][j]) / Math.max(blackdist[i][j], whitedist[i][j]));
+                    double w = Math.round(confidence[i][j] * 1000);
+                    confidence[i][j] = w / 1000;
                 }
                 
             }
@@ -398,21 +578,28 @@ public class Board {
 
     public void distSearch(String color, int startX, int startY){
 
+        this.v = new boolean[19][19];
+
         Queue<pair> pq = new LinkedList<>();
 
         pq.add(new pair(0, cellArr[startX][startY]));
 
         while(!pq.isEmpty()){
             pair cur = pq.poll();
+
+            v[cur.getCell().getX()][cur.getCell().getY()] = true;
            
             
 
             if(cur.getCell().getcolor().equals(color)){
                 if(color.equals("black")){
                     blackdist[startX][startY] = cur.getSteps();
+                    category[startX][startY] = 1;
                 }
                 else{
                     whitedist[startX][startY] = cur.getSteps();
+                    category[startX][startY] = 2;
+                    
                 }
                 return;
             }
@@ -420,16 +607,16 @@ public class Board {
                 continue;
             }
 
-            if(cur.getCell().getX() + 1 <= 18){
+            if(cur.getCell().getX() + 1 <= 18 && checkadj(cur.getCell().getX()+1, cur.getCell().getY(), color) && !v[cur.getCell().getX()+1][cur.getCell().getY()]){
                pq.add(new pair(cur.getSteps()+1, cellArr[cur.getCell().getX()+1][cur.getCell().getY()]));
             }
-            if(cur.getCell().getX() - 1 >= 0){
+            if(cur.getCell().getX() - 1 >= 0  && checkadj(cur.getCell().getX()-1, cur.getCell().getY(), color) && !v[cur.getCell().getX()-1][cur.getCell().getY()]){
                pq.add(new pair(cur.getSteps()+1, cellArr[cur.getCell().getX()-1][cur.getCell().getY()]));
             }
-            if(cur.getCell().getY() + 1 <= 18){
+            if(cur.getCell().getY() + 1 <= 18 && checkadj(cur.getCell().getX(), cur.getCell().getY()+1, color) && !v[cur.getCell().getX()][cur.getCell().getY()+1]){
                pq.add(new pair(cur.getSteps()+1, cellArr[cur.getCell().getX()][cur.getCell().getY()+1]));
             }
-            if(cur.getCell().getY() - 1 >= 0){
+            if(cur.getCell().getY() - 1 >= 0  && checkadj(cur.getCell().getX(), cur.getCell().getY()-1, color) && !v[cur.getCell().getX()][cur.getCell().getY()-1]){
                pq.add(new pair(cur.getSteps()+1, cellArr[cur.getCell().getX()][cur.getCell().getY()-1]));
             }
 
@@ -480,6 +667,19 @@ public class Board {
             }
         }
     }
+
+    public void endgame(){
+        this.boxCreator(1.25, 0.15, 0.2, 0.1);
+        this.countTerritory();
+        Font font = new Font("ARIAL", Font.BOLD, 20);
+        StdDraw.setFont(font);
+        StdDraw.text(1.2, 0.2, "Black Territory: " + Integer.toString(blackterri + black_capture));
+        StdDraw.text(1.2, 0.1, "White Territory: " + Integer.toString(whiteterri + white_capture) );
+        StdDraw.show();
+        // StdDraw.pause(2000);
+        // this.ClearBox(1.25, 0.15, 0.2, 0.1);
+        this.isEnded = true;
+    }
     
 
     public void buttonchecker(){
@@ -510,6 +710,10 @@ public class Board {
             StdDraw.clear();
             Board board = new Board();
         }
+    }
+
+    public void reset(){
+        StdDraw.clear();
     }
 
     public void update(){
